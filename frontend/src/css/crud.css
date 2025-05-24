@@ -1,0 +1,168 @@
+/* Estilos existentes */
+.crud-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.crud-container h2 {
+  text-align: center;
+  color: #1e293b;
+  margin-bottom: 20px;
+}
+
+.crud-container h3 {
+  color: #1e293b;
+  margin-top: 30px;
+}
+
+.crud-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 500px;
+  margin: 0 auto 20px;
+}
+
+.crud-form select,
+.crud-form input {
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.crud-form button {
+  padding: 10px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.crud-form button:hover {
+  background-color: #1e40af;
+}
+
+.crud-form button[type="button"] {
+  background-color: #6b7280;
+}
+
+.crud-form button[type="button"]:hover {
+  background-color: #4b5563;
+}
+
+.crud-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.crud-table th,
+.crud-table td {
+  border: 1px solid #e2e8f0;
+  padding: 10px;
+  text-align: left;
+}
+
+.crud-table th {
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+.crud-table button {
+  padding: 5px 10px;
+  margin-right: 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.crud-table button:first-child {
+  background-color: #2563eb;
+  color: white;
+}
+
+.crud-table button:first-child:hover {
+  background-color: #1e40af;
+}
+
+.crud-table button:last-child {
+  background-color: #dc2626;
+  color: white;
+}
+
+.crud-table button:last-child:hover {
+  background-color: #b91c1c;
+}
+
+.error {
+  color: #dc2626;
+  text-align: center;
+  margin: 10px 0;
+}
+
+.success {
+  color: #16a34a;
+  text-align: center;
+  margin: 10px 0;
+}
+
+.logout-btn,
+.back-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  margin: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.logout-btn {
+  background-color: #6b7280;
+  color: white;
+}
+
+.logout-btn:hover {
+  background-color: #4b5563;
+}
+
+.back-btn {
+  background-color: #2563eb;
+  color: white;
+}
+
+.back-btn:hover {
+  background-color: #1e40af;
+}
+
+/* Nuevos estilos para paginación */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.pagination-btn {
+  padding: 10px 20px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.pagination-btn:disabled {
+  background-color: #e2e8f0;
+  cursor: not-allowed;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #1e40af;
+}
