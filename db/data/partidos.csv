@@ -1,0 +1,17 @@
+id_partido,nombre,sigla,estado
+d25a7349-ec24-4657-8312-d8ac7cbd9be3,Alianza Unidad,UN,activo
+21e85fd0-fcba-47e5-8872-36d163e7a34f,Alianza Libre,LIBRE,activo
+9776b76f-9e9e-4abb-8f80-ff4941f703f7,Bolivia Súmate,SUMATE,activo
+e11230b5-e340-4183-904c-37702014a129,Movimiento al Socialismo,MAS,activo
+07f93b46-14e9-442a-a7fb-99f381a086aa,Nueva Generación Política,NGP,activo
+c751c898-4d8f-42f6-85fb-9afafa0b0be8,Partido Demócrata Cristiano,PDC,activo
+f3f2f75f-1298-473b-8e7d-4de745b91715,Alianza Libertad y Progreso,ADN,activo
+e655a2d3-5371-4ba4-9776-3435aa4c26c5,Morena,MORENA,activo
+aeb0001b-c798-4894-a55c-6bb67a5a959f,Alianza Fuerza del Pueblo,UCS,activo
+360ccd04-f6ac-4780-9993-294fb055383e,Votos en Blanco,NA,activo
+ce926816-b1d3-424f-a3cd-525c3745e3a1,Alianza Popular,MTS,inactivo
+9c4197a5-55fe-4a5d-b06c-81feb44ed308,Frente para la Victoria,FPV,inactivo
+aa3db30e-ce9e-4ad1-bee8-211554d6bb0d,Movimiento Nacionalista Revolucionario,MNR,inactivo
+f6b9af84-3e4b-4cb5-8192-d57d9704ab5b,Acción Democrática Nacionalista,ADN,inactivo
+1bdd0398-89d2-4c81-a7b2-40fbb4fc74d9,Pan-Bol,PAN-BOL,inactivo
+dcebfeeb-8d24-4c9a-99d4-c7e19623d387,Comunidad Ciudadana,CC,inactivo

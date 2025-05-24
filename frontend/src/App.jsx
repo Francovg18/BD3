@@ -6,6 +6,8 @@ import AdminLogin from './components/AdminLogin';
 import Home from './pages/Home';
 import AdminCrud from './components/AdminCrud';
 import JurorCrud from './components/JurorCrud';
+import Departament from './pages/Departament';
+import Candidatos from './pages/Candidatos';
 function App() {
 
   return (
@@ -17,6 +19,8 @@ function App() {
         <Route path="/admin-crud" element={<AdminCrud />} />
         <Route path="/juror-crud" element={<JurorCrud />} />
         <Route path="/" element={<Home />} />
+        <Route path="/departament" element={<Departament />} />
+        <Route path="/candidatos" element={<Candidatos />} />
       </Routes>
       </Router>
     </>
