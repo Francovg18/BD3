@@ -96,17 +96,17 @@ for _, row in partidos_df.iterrows():
 # }
 
 pesos_globales = {
-    # 1
-    'Alianza Libre': 22,
-    'Nueva Generación Política': 18,
-    'Alianza Unidad': 14,
-    'Bolivia Súmate': 14,
-    'Movimiento al Socialismo': 11,
-    'Partido Demócrata Cristiano': 6,
+    # En realidad, no es obligatorio que sumen 100
+    'Alianza Libre': 24,
+    'Nueva Generación Política': 19,
+    'Movimiento al Socialismo': 15,
+    'Bolivia Súmate': 15,
+    'Alianza Unidad': 12,
+    'Morena': 5,
     'Votos en Blanco': 4,
-    'Alianza Libertad y Progreso': 3,
-    'Morena': 3,
-    'Alianza Fuerza del Pueblo': 3
+    'Partido Demócrata Cristiano': 3,
+    'Alianza Libertad y Progreso': 2,
+    'Alianza Fuerza del Pueblo': 1
 }
 
 # Rangos de votos por mesa por departamento (reflecta diferencias de participación)
