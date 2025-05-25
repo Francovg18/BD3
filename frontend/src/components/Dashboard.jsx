@@ -45,7 +45,7 @@ const coloresPorPartido = {
   'SUMATE': { background: 'rgba(153, 102, 255, 0.8)', border: 'rgba(153, 102, 255, 1)' },
   'ADN': { background: 'rgba(255, 0, 0, 0.8)', border: 'rgba(0, 0, 0, 1)' },
   'UN': { background: 'rgba(228, 222, 44, 0.8)', border: 'rgba(54, 162, 235, 1)' },
-  'LIBRE': { background: 'rgba(40, 94, 243, 0.8)', border: 'rgba(243, 40, 40, 1)' },
+  'LIBRE': { background: 'rgba(40, 128, 243, 0.8)', border: 'rgba(243, 40, 40, 1)' },
   'PDC': { background: 'rgba(75, 192, 92, 0.8)', border: 'rgba(243, 40, 40, 1)' },
   'NA': { background: 'rgba(213, 213, 213, 0.8)', border: 'rgba(133, 133, 133, 1)' },
   'MORENA': { background: 'rgba(66, 63, 0, 0.8)', border: 'rgba(145, 39, 39, 1)' },
@@ -252,7 +252,7 @@ export default function Dashboard() {
             <div
               key={partido.sigla}
               className="summary-card"
-              style={{ borderTop: `4px solid ${coloresPorPartido[partido.sigla]?.border || 'rgba(128, 128, 128, 1)'}` }}
+              style={{ borderTop: `4px solid ${coloresPorPartido[partido.sigla]?.background || 'rgba(128, 128, 128, 1)'}` }}
             >
               <h3>{partido.sigla}</h3>
               <div className="value">{partido.votos.toLocaleString()}</div>

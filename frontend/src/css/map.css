@@ -1,0 +1,31 @@
+.map-page-container {
+  max-width: 1200px;
+  padding: 1rem; /* Reduced padding */
+}
+
+.map-container {
+  position: relative;
+  width: 100%;
+  margin: 0; /* Remove margins */
+  padding: 0.5rem; /* Reduced padding */
+}
+
+.map-container svg {
+  display: block; /* Remove any inline-block spacing */
+  width: 100%;
+  height: auto;
+}
+
+.legend ul {
+  list-style: none;
+  padding: 0;
+}
+
+.department-table table {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+}
+
+.department-table th, .department-table td {
+  text-align: left;
+}

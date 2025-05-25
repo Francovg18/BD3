@@ -1,13 +1,13 @@
 import React from 'react'
 import NavBar from '../components/NavBar'
-import LiveResultsByRegion from '../components/LiveResultsByRegion'
+import Map from '../components/Map'
 import Footer from '../components/Footer'
 function Home() {
   return (
     <>
         <NavBar/>
         <div className='m-12'>
-            <LiveResultsByRegion/>
+            <Map/>
         </div>
         <Footer/>
     </>
