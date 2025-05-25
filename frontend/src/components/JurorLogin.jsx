@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
 import { auth } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import Navbar from './NavBar';
+import { useNavigate } from 'react-router-dom';
+import NavBar from './NavBar';
 import Footer from './Footer';
 
 const JurorLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      alert('Autenticación exitosa con Firebase como jurado');
+      alert('Autenticación exitosa con Firebase como jurado de mesa');
       console.log('Usuario autenticado:', userCredential.user);
-      // Aquí podrías redirigir o guardar datos
+      navigate('/juror-crud'); // Redirigir a la página CRUD de jurado
     } catch (err) {
       setError('Error al iniciar sesión: ' + err.message);
     }
@@ -23,11 +25,11 @@ const JurorLogin = () => {
 
   return (
     <>
-      <Navbar />
+      <NavBar />
 
       <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 py-12">
         <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
-          <h2 className="text-2xl font-bold text-center mb-6 text-blue-600">Login de Jurado</h2>
+          <h2 className="text-2xl font-bold text-center mb-6 text-blue-600">Login de jurado de mesa</h2>
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -36,7 +38,7 @@ const JurorLogin = () => {
               <input
                 id="email"
                 type="email"
-                placeholder="ejemplo@correo.com"
+                placeholder="juror@correo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -70,6 +72,12 @@ const JurorLogin = () => {
               Iniciar Sesión
             </button>
           </form>
+          <button
+            onClick={() => navigate('/')}
+            className="w-full mt-4 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 rounded-lg transition duration-200"
+          >
+            Volver al Dashboard
+          </button>
         </div>
       </div>
 

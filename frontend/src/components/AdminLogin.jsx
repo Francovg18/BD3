@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { auth } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 import NavBar from './NavBar';
 import Footer from './Footer';
 
@@ -8,6 +9,7 @@ const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -15,6 +17,7 @@ const AdminLogin = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       alert('Autenticación exitosa con Firebase como administrador');
       console.log('Usuario autenticado:', userCredential.user);
+      navigate('/admin-crud'); // Redirigir a la página CRUD de admin
     } catch (err) {
       setError('Error al iniciar sesión: ' + err.message);
     }
@@ -69,6 +72,12 @@ const AdminLogin = () => {
               Iniciar Sesión
             </button>
           </form>
+          <button
+            onClick={() => navigate('/')}
+            className="w-full mt-4 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 rounded-lg transition duration-200"
+          >
+            Volver al Dashboard
+          </button>
         </div>
       </div>
 
