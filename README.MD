@@ -1,4 +1,4 @@
-# ProyectBD - Sistema de Votación Electrónica
+# BD3 - Sistema de Votación Electrónica
 
 Este proyecto es un sistema para monitorear resultados electorales en Bolivia. Utiliza un backend en Flask (Python), un frontend en React, y almacena datos en Apache Cassandra y Redis. Este `README.md` está diseñado para guiar a usuarios con poca experiencia en Git, WSL2, React, Python, Bash o Linux, con instrucciones detalladas y claras.
 
@@ -71,16 +71,9 @@ Si no tienes estos programas, instálalos en WSL2 con los siguientes comandos:
 1. Abre una terminal en WSL2 (por ejemplo, Ubuntu).
 2. Clona el repositorio:
    ```bash
-   git clone https://github.com/Francovg18/ProyectBD
-   cd ProyectBD
+   git clone https://github.com/Francovg18/BD3
+   cd BD3
    ```
-
-3. Cambia al branch `version2`:
-   ```bash
-   git checkout version2
-   ```
-
-   **Nota**: Si ves un error como `error: pathspec 'version2' did not match any file(s) known to git`, verifica que el branch existe en GitHub o contacta al equipo.
 
 ## Configuración inicial
 
@@ -153,27 +146,36 @@ Para evitar errores, limpia las bases de datos Redis y Cassandra antes de config
    **Nota**: Esto ejecuta Cassandra en primer plano. Abre una nueva terminal (Ctrl+T en la mayoría de los terminales) para continuar con los siguientes pasos, dejando esta terminal corriendo.
 
 2. Crea las tablas en Cassandra:
-   En la nueva terminal, ejecuta:
+   En la raiz del proyecto, ejecuta:
    ```bash
+   cd db/
    cqlsh -f db/cassandra_datos1.cql
    ```
 
    Esto crea el keyspace `elecciones` y sus tablas. Si ves errores, verifica que Cassandra esté corriendo (`ps aux | grep cassandra`) y que `cqlsh` esté instalado.
 
+### Iniciar Redis
+1. Ejecutar en una terminal
+
+   ```bash
+   redis-server
+   ```
+
 ### Generar datos
 
 1. Asegúrate de estar en la raíz del proyecto:
-   ```bash
-   cd ~/publico/ProyectBD
-   ```
 
+   ```bash
+   cd ~/publico/BD3
+   ```
+   
 2. Genera datos para la base de datos:
    ```bash
    cd db
    python3 generate_data.py
    ```
 
-   **Nota**: Esto pobla las tablas en Cassandra. Asegúrate de haber ejecutado `cqlsh -f cassandra_datos1.cql` primero, o dará errores. Usa `NUM_MESAS = 35000` en `generate_data.py` para pruebas finales.
+   **Nota**: Esto pobla las tablas en Cassandra. Asegúrate de haber ejecutado `cqlsh -f cassandra_datos1.cql` primero, o dará errores. Para las pruebas finales, se usará `NUM_MESAS = 35000` en `generate_data.py` 
 
 3. Vuelve a la raíz:
    ```bash
@@ -186,6 +188,7 @@ Abre **tres terminales** en WSL2 para ejecutar los servicios (Backend, Frontend,
 
 ### Terminal 1: Redis
 
+Si aun no está iniciado,
 1. Inicia Redis:
    ```bash
    redis-server
@@ -197,7 +200,7 @@ Abre **tres terminales** en WSL2 para ejecutar los servicios (Backend, Frontend,
 
 1. Asegúrate de estar en la raíz del proyecto:
    ```bash
-   cd ~/publico/ProyectBD
+   cd ~/publico/BD3
    ```
 
 2. Activa el entorno virtual si no está activo:
@@ -216,7 +219,7 @@ Abre **tres terminales** en WSL2 para ejecutar los servicios (Backend, Frontend,
 
 1. Navega al directorio `frontend`:
    ```bash
-   cd ~/publico/ProyectBD/frontend
+   cd ~/publico/BD3/frontend
    ```
 
 2. Inicia el frontend:
