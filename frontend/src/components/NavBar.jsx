@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, ChevronDown, User, LogIn, Home, Users, MapPin, Info } from 'lucide-react';
+import { Menu, X, ChevronDown, User, LogIn, Home, Users, MapPin, Info, Target } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Navbar() {
@@ -7,7 +7,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('inicio');
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [timeoutId, setTimeoutId] = useState(null); // Estado para almacenar el ID del temporizador
+  const [timeoutId, setTimeoutId] = useState(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,24 +30,22 @@ export default function Navbar() {
   ];
 
   const infoItems = [
-    { label: 'Proceso Electoral', href: '/proceso' },
-    { label: 'Recintos de Votación', href: '/recintos' },
-    { label: 'Preguntas Frecuentes', href: '/preguntas' },
+    { label: 'Proceso Electoral', target: '_blank', href: 'https://www.oep.org.bo/wp-content/uploads/2025/04/04-04-25-calendario-Electoral-EG-2025.pdf' },
+    { label: 'Recintos de Votación', target: '_blank', href: 'https://yoparticipo.oep.org.bo/auth/signin' },
+    { label: 'Preguntas Frecuentes', target: '_blank', href: 'https://www.oep.org.bo/elecciones-generales-2019/preguntas-frecuentes/' },
   ];
 
-  // Función para abrir el menú desplegable
   const handleMouseEnter = () => {
     if (timeoutId) {
-      clearTimeout(timeoutId); // Cancela cualquier temporizador de cierre pendiente
+      clearTimeout(timeoutId);
     }
     setDropdownOpen(true);
   };
 
-  // Función para cerrar el menú con retraso
   const handleMouseLeave = () => {
     const id = setTimeout(() => {
       setDropdownOpen(false);
-    }, 200); // Retraso de 200ms para permitir mover el cursor al menú
+    }, 200);
     setTimeoutId(id);
   };
 
@@ -155,16 +153,18 @@ export default function Navbar() {
               className={`absolute top-full left-0 mt-2 w-64 bg-white/95 backdrop-blur-lg shadow-2xl rounded-2xl border border-gray-200/50 transform transition-all duration-300 ${
                 dropdownOpen ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-2 scale-95 pointer-events-none'
               }`}
-              onMouseEnter={handleMouseEnter} // Mantener el menú abierto al entrar en él
-              onMouseLeave={handleMouseLeave} // Cerrar el menú con retraso al salir
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
             >
               <div className="p-2">
                 {infoItems.map((item, index) => (
                   <a
                     key={index}
                     href={item.href}
+                    target={item.target || '_self'} // Usa '_self' como predeterminado
+                    rel={item.target === '_blank' ? 'noopener noreferrer' : undefined} // Seguridad para nueva pestaña
                     className="flex items-center px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-green-50 hover:text-red-700 rounded-xl transition-all duration-300 group"
-                    onClick={() => setDropdownOpen(false)} // Cierra el menú al hacer clic
+                    onClick={() => setDropdownOpen(false)}
                   >
                     <div className="w-2 h-2 bg-gradient-to-r from-red-600 to-green-600 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     {item.label}
@@ -255,6 +255,8 @@ export default function Navbar() {
                   <a
                     key={index}
                     href={item.href}
+                    target={item.target || '_self'} // Usa '_self' como predeterminado
+                    rel={item.target === '_blank' ? 'noopener noreferrer' : undefined} // Seguridad para nueva pestaña
                     className="flex items-center text-gray-700 py-2 hover:text-red-600 transition-colors duration-300"
                   >
                     <div className="w-2 h-2 bg-gradient-to-r from-red-600 to-green-600 rounded-full mr-3"></div>
