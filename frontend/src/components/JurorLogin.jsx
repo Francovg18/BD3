@@ -22,7 +22,7 @@ const JurorLogin = () => {
       // Obtener el token y verificar el rol
       const idTokenResult = await user.getIdTokenResult();
       const userEmail = idTokenResult.claims.email || user.email;
-      const role = userEmail.startsWith('admin@') ? 'admin' : 'juror';
+      const role = userEmail.endsWith('@admin.com') ? 'admin' : 'juror';
 
       if (role !== 'juror') {
         await auth.signOut(); // Cerrar sesión si el rol no es correcto
