@@ -119,7 +119,7 @@ export default function Navbar() {
                   : 'bg-white text-red-600 hover:bg-gray-100'
               }`}
             >
-              <LogIn size={18} className="mr-2" /> Iniciar Sesión
+              <LogIn size={18} className="mr-2" /> Jurado
             </button>
             <button
               onClick={() => handleNavigation('/admin-login')}
@@ -197,7 +197,7 @@ export default function Navbar() {
                 onClick={() => handleNavigation('/juror-login')}
                 className="w-full flex items-center justify-center px-4 py-2 border border-red-600 text-red-600 rounded-full hover:bg-red-50 transition cursor-pointer"
               >
-                <LogIn size={18} className="mr-2" /> Iniciar Sesión
+                <LogIn size={18} className="mr-2" /> Jurado
               </button>
               <button
                 onClick={() => handleNavigation('/admin-login')}
