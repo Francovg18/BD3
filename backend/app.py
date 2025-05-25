@@ -35,7 +35,7 @@ def verify_token_and_role(required_role):
         decoded_token = auth.verify_id_token(token)
         user_id = decoded_token['uid']
         email = decoded_token['email']
-        role = 'admin' if email.startswith('admin@') else 'juror'
+        role = 'admin' if email.endswith('@admin.com') else 'juror'
         if role != required_role:
             return None, jsonify({"error": "Rol no autorizado"}), 403
         return user_id, None
