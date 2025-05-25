@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import NavBar from './NavBar';
 import Footer from './Footer';
+import '../css/crud.css';
 
 const JurorLogin = () => {
   const [email, setEmail] = useState('');
@@ -13,11 +14,25 @@ const JurorLogin = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Obtener el token y verificar el rol
+      const idTokenResult = await user.getIdTokenResult();
+      const userEmail = idTokenResult.claims.email || user.email;
+      const role = userEmail.startsWith('admin@') ? 'admin' : 'juror';
+
+      if (role !== 'juror') {
+        await auth.signOut(); // Cerrar sesión si el rol no es correcto
+        setError('Acceso denegado: Esta cuenta no es de un jurado.');
+        return;
+      }
+
       alert('Autenticación exitosa con Firebase como jurado de mesa');
-      console.log('Usuario autenticado:', userCredential.user);
-      navigate('/juror-crud'); // Redirigir a la página CRUD de jurado
+      console.log('Usuario autenticado:', user);
+      navigate('/juror-crud');
     } catch (err) {
       setError('Error al iniciar sesión: ' + err.message);
     }
@@ -26,10 +41,9 @@ const JurorLogin = () => {
   return (
     <>
       <NavBar />
-
       <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 py-12">
         <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
-          <h2 className="text-2xl font-bold text-center mb-6 text-blue-600">Login de jurado de mesa</h2>
+          <h2 className="text-2xl font-bold text-center mb-6 text-blue-600">Login de Jurado de Mesa</h2>
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -45,7 +59,6 @@ const JurorLogin = () => {
                 className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Contraseña
@@ -60,11 +73,9 @@ const JurorLogin = () => {
                 className="mt-1 w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-
             {error && (
               <p className="text-red-500 text-sm">{error}</p>
             )}
-
             <button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition duration-200"
@@ -80,7 +91,6 @@ const JurorLogin = () => {
           </button>
         </div>
       </div>
-
       <Footer />
     </>
   );

@@ -30,12 +30,10 @@ def verify_token_and_role(required_role):
     if not token:
         return None, jsonify({"error": "Token requerido"}), 401
     try:
-        # Eliminar "Bearer " si está presente
         if token.startswith('Bearer '):
             token = token[7:]
         decoded_token = auth.verify_id_token(token)
         user_id = decoded_token['uid']
-        # Verificar rol basado en email (simplificado)
         email = decoded_token['email']
         role = 'admin' if email.startswith('admin@') else 'juror'
         if role != required_role:
@@ -56,8 +54,71 @@ def log_audit(user_id, accion, id_mesa):
         'fecha_hora': timestamp
     })
 
-# Endpoint para jurados (solo su mesa)
-@app.route("/votos/jurado", methods=['POST', 'PUT', 'GET'])
+# Nuevo endpoint para crear una mesa con votos
+@app.route("/mesas", methods=['POST'])
+def create_mesa():
+    user_id, error_response = verify_token_and_role(request.args.get('role'))
+    if error_response:
+        return error_response
+
+    data = request.json
+    departamento = data.get('departamento')
+    municipio = data.get('municipio')
+    recinto = data.get('recinto')
+    votos = data.get('votos')  # Dict: {id_partido: total_votos}
+    if not all([departamento, municipio, recinto, votos]):
+        return jsonify({"error": "Faltan campos requeridos"}), 400
+
+    try:
+        # Validar departamento y municipio
+        departamentos_validos = ['La_Paz', 'Cochabamba', 'Santa_Cruz', 'Oruro', 'Potosí', 'Chuquisaca', 'Tarija', 'Pando', 'Beni']
+        if departamento not in departamentos_validos:
+            return jsonify({"error": "Departamento inválido"}), 400
+
+        # Validar votos (suma <= 200, partidos activos)
+        partidos = session.execute(
+            "SELECT id_partido FROM Partido_Politico WHERE estado = 'activo' ALLOW FILTERING"
+        )
+        partidos_activos = [str(p.id_partido) for p in partidos]
+        if set(votos.keys()) != set(partidos_activos):
+            return jsonify({"error": "Votos deben incluir todos los partidos activos"}), 400
+        total_votos = sum(int(v) for v in votos.values())
+        if total_votos > 200:
+            return jsonify({"error": "La suma de votos excede el padrón (200)"}), 400
+
+        # Generar id_mesa
+        id_mesa = str(uuid.uuid4())
+
+        # Insertar mesa en Cassandra
+        session.execute(
+            "INSERT INTO Mesa_Electoral (id_mesa, departamento, municipio, recinto, nro_mesa, estado) "
+            "VALUES (%s, %s, %s, %s, %s, %s)",
+            [uuid.UUID(id_mesa), departamento, municipio, recinto, 1, 'activo']
+        )
+
+        # Insertar votos para cada partido
+        timestamp = datetime.now()
+        for id_partido, total_votos in votos.items():
+            if int(total_votos) > 0:  # Solo insertar si hay votos
+                session.execute(
+                    "INSERT INTO Votos (id_mesa, id_partido, fecha_hora, votos, user_id) "
+                    "VALUES (%s, %s, %s, %s, %s)",
+                    [uuid.UUID(id_mesa), uuid.UUID(id_partido), timestamp, int(total_votos), user_id]
+                )
+                # Actualizar Redis
+                r.hincrby(f'votos_totales:departamento:{departamento}', id_partido, int(total_votos))
+                r.hincrby(f'votos_totales:mesa:{id_mesa}', id_partido, int(total_votos))
+
+        # Registrar auditoría
+        log_audit(user_id, f"Creación de mesa {id_mesa} con votos", id_mesa)
+        return jsonify({"message": "Mesa creada exitosamente", "id_mesa": id_mesa}), 201
+
+    except Exception as e:
+        print(f"Error en /mesas: {str(e)}")
+        return jsonify({"error": f"Error interno: {str(e)}"}), 500
+
+# Endpoint para jurados (solo lectura de su mesa)
+@app.route("/votos/jurado", methods=['GET'])
 def jurado_crud():
     user_id, error_response = verify_token_and_role('juror')
     if error_response:
@@ -68,7 +129,6 @@ def jurado_crud():
         return jsonify({"error": "id_mesa requerido"}), 400
 
     try:
-        # Validar que la mesa existe
         mesa = session.execute(
             "SELECT id_mesa, departamento FROM Mesa_Electoral WHERE id_mesa = %s",
             [uuid.UUID(id_mesa_asignada)]
@@ -76,89 +136,34 @@ def jurado_crud():
         if not mesa:
             return jsonify({"error": "Mesa no encontrada"}), 404
 
-        if request.method == 'POST':
-            data = request.json
-            id_partido = data.get('id_partido')
-            total_votos = data.get('total_votos')
-            if not all([id_partido, total_votos is not None]):
-                return jsonify({"error": "Faltan campos requeridos"}), 400
-
-            # Insertar o actualizar voto en Cassandra
-            timestamp = datetime.now()
-            session.execute(
-                "INSERT INTO Votos (id_mesa, id_partido, fecha_hora, votos, user_id) "
-                "VALUES (%s, %s, %s, %s, %s)",
-                [uuid.UUID(id_mesa_asignada), uuid.UUID(id_partido), timestamp, total_votos, user_id]
-            )
-
-            # Actualizar Redis
-            r.hincrby(f'votos_totales:departamento:{mesa.departamento}', id_partido, total_votos)
-            r.hincrby(f'votos_totales:mesa:{id_mesa_asignada}', id_partido, total_votos)
-
-            # Registrar auditoría
-            log_audit(user_id, f"Registro de {total_votos} votos para partido {id_partido} en mesa {id_mesa_asignada}", id_mesa_asignada)
-            return jsonify({"message": "Voto registrado exitosamente"}), 201
-
-        elif request.method == 'PUT':
-            data = request.json
-            id_partido = data.get('id_partido')
-            total_votos = data.get('total_votos')
-            if not all([id_partido, total_votos is not None]):
-                return jsonify({"error": "Faltan campos requeridos"}), 400
-
-            # Verificar que el voto existe
-            voto = session.execute(
-                "SELECT id_mesa, id_partido, votos FROM Votos WHERE id_mesa = %s AND id_partido = %s",
-                [uuid.UUID(id_mesa_asignada), uuid.UUID(id_partido)]
-            ).one()
-            if not voto:
-                return jsonify({"error": "Voto no encontrado"}), 404
-
-            # Actualizar voto en Cassandra
-            session.execute(
-                "UPDATE Votos SET votos = %s, fecha_hora = %s, user_id = %s "
-                "WHERE id_mesa = %s AND id_partido = %s",
-                [total_votos, datetime.now(), user_id, uuid.UUID(id_mesa_asignada), uuid.UUID(id_partido)]
-            )
-
-            # Ajustar Redis
-            diferencia = total_votos - voto.votos
-            r.hincrby(f'votos_totales:departamento:{mesa.departamento}', id_partido, diferencia)
-            r.hincrby(f'votos_totales:mesa:{id_mesa_asignada}', id_partido, diferencia)
-
-            # Registrar auditoría
-            log_audit(user_id, f"Actualización de {total_votos} votos para partido {id_partido} en mesa {id_mesa_asignada}", id_mesa_asignada)
-            return jsonify({"message": "Voto actualizado exitosamente"}), 200
-
-        elif request.method == 'GET':
-            votos = session.execute(
-                "SELECT id_mesa, id_partido, votos, fecha_hora FROM Votos WHERE id_mesa = %s",
-                [uuid.UUID(id_mesa_asignada)]
-            )
-            data = [
-                {
-                    "id_mesa": str(v.id_mesa),
-                    "id_partido": str(v.id_partido),
-                    "total_votos": v.votos,
-                    "fecha_hora": v.fecha_hora.isoformat()
-                }
-                for v in votos
-            ]
-            return jsonify({"data": data})
+        votos = session.execute(
+            "SELECT id_mesa, id_partido, votos, fecha_hora FROM Votos WHERE id_mesa = %s",
+            [uuid.UUID(id_mesa_asignada)]
+        )
+        data = [
+            {
+                "id_mesa": str(v.id_mesa),
+                "id_partido": str(v.id_partido),
+                "total_votos": v.votos,
+                "fecha_hora": v.fecha_hora.isoformat()
+            }
+            for v in votos
+        ]
+        return jsonify({"data": data})
 
     except Exception as e:
         print(f"Error en /votos/jurado: {str(e)}")
         return jsonify({"error": f"Error interno: {str(e)}"}), 500
 
-# Endpoint para administradores (acceso completo)
-@app.route("/votos/admin", methods=['POST', 'PUT', 'DELETE', 'GET'])
+# Endpoint para administradores (editar/eliminar votos existentes)
+@app.route("/votos/admin", methods=['PUT', 'DELETE', 'GET'])
 def admin_crud():
     user_id, error_response = verify_token_and_role('admin')
     if error_response:
         return error_response
 
     try:
-        if request.method == 'POST':
+        if request.method == 'PUT':
             data = request.json
             id_mesa = data.get('id_mesa')
             id_partido = data.get('id_partido')
@@ -166,39 +171,6 @@ def admin_crud():
             if not all([id_mesa, id_partido, total_votos is not None]):
                 return jsonify({"error": "Faltan campos requeridos"}), 400
 
-            # Validar que la mesa existe
-            mesa = session.execute(
-                "SELECT id_mesa, departamento FROM Mesa_Electoral WHERE id_mesa = %s",
-                [uuid.UUID(id_mesa)]
-            ).one()
-            if not mesa:
-                return jsonify({"error": "Mesa no encontrada"}), 404
-
-            # Insertar o actualizar voto en Cassandra
-            timestamp = datetime.now()
-            session.execute(
-                "INSERT INTO Votos (id_mesa, id_partido, fecha_hora, votos, user_id) "
-                "VALUES (%s, %s, %s, %s, %s)",
-                [uuid.UUID(id_mesa), uuid.UUID(id_partido), timestamp, total_votos, user_id]
-            )
-
-            # Actualizar Redis
-            r.hincrby(f'votos_totales:departamento:{mesa.departamento}', id_partido, total_votos)
-            r.hincrby(f'votos_totales:mesa:{id_mesa}', id_partido, total_votos)
-
-            # Registrar auditoría
-            log_audit(user_id, f"Registro de {total_votos} votos para partido {id_partido} en mesa {id_mesa}", id_mesa)
-            return jsonify({"message": "Voto registrado exitosamente"}), 201
-
-        elif request.method == 'PUT':
-            data = request.json
-            id_mesa = data.get('id_mesa')
-            id_partido = data.get('id_partido')
-            total_votos = data.get('total_votos')
-            if not all([id_mesa, id_partido, total_votos is not None]):
-                return jsonify({"error": "Faltan campos requeridos"}), 400
-
-            # Verificar que el voto existe usando la clave primaria completa
             voto = session.execute(
                 "SELECT id_mesa, id_partido, votos FROM Votos WHERE id_mesa = %s AND id_partido = %s",
                 [uuid.UUID(id_mesa), uuid.UUID(id_partido)]
@@ -206,7 +178,6 @@ def admin_crud():
             if not voto:
                 return jsonify({"error": "Voto no encontrado"}), 404
 
-            # Obtener el departamento de la mesa
             mesa = session.execute(
                 "SELECT departamento FROM Mesa_Electoral WHERE id_mesa = %s",
                 [uuid.UUID(id_mesa)]
@@ -214,19 +185,16 @@ def admin_crud():
             if not mesa:
                 return jsonify({"error": "Mesa no encontrada"}), 404
 
-            # Actualizar voto en Cassandra
             session.execute(
                 "UPDATE Votos SET votos = %s, fecha_hora = %s, user_id = %s "
                 "WHERE id_mesa = %s AND id_partido = %s",
                 [total_votos, datetime.now(), user_id, uuid.UUID(id_mesa), uuid.UUID(id_partido)]
             )
 
-            # Ajustar Redis
             diferencia = total_votos - voto.votos
             r.hincrby(f'votos_totales:departamento:{mesa.departamento}', id_partido, diferencia)
             r.hincrby(f'votos_totales:mesa:{id_mesa}', id_partido, diferencia)
 
-            # Registrar auditoría
             log_audit(user_id, f"Actualización de {total_votos} votos para partido {id_partido} en mesa {id_mesa}", id_mesa)
             return jsonify({"message": "Voto actualizado exitosamente"}), 200
 
@@ -236,7 +204,6 @@ def admin_crud():
             if not all([id_mesa, id_partido]):
                 return jsonify({"error": "id_mesa e id_partido requeridos"}), 400
 
-            # Verificar que el voto existe
             voto = session.execute(
                 "SELECT id_mesa, id_partido, votos FROM Votos WHERE id_mesa = %s AND id_partido = %s",
                 [uuid.UUID(id_mesa), uuid.UUID(id_partido)]
@@ -244,7 +211,6 @@ def admin_crud():
             if not voto:
                 return jsonify({"error": "Voto no encontrado"}), 404
 
-            # Obtener el departamento de la mesa
             mesa = session.execute(
                 "SELECT departamento FROM Mesa_Electoral WHERE id_mesa = %s",
                 [uuid.UUID(id_mesa)]
@@ -252,17 +218,14 @@ def admin_crud():
             if not mesa:
                 return jsonify({"error": "Mesa no encontrada"}), 404
 
-            # Eliminar voto en Cassandra
             session.execute(
                 "DELETE FROM Votos WHERE id_mesa = %s AND id_partido = %s",
                 [uuid.UUID(id_mesa), uuid.UUID(id_partido)]
             )
 
-            # Ajustar Redis
             r.hincrby(f'votos_totales:departamento:{mesa.departamento}', id_partido, -voto.votos)
             r.hincrby(f'votos_totales:mesa:{id_mesa}', id_partido, -voto.votos)
 
-            # Registrar auditoría
             log_audit(user_id, f"Eliminación de voto para partido {id_partido} en mesa {id_mesa}", id_mesa)
             return jsonify({"message": "Voto eliminado exitosamente"}), 200
 
@@ -348,7 +311,26 @@ def get_partidos():
         print(f"Error en /partidos: {str(e)}")
         return jsonify({"error": f"Error interno: {str(e)}"}), 500
 
-# Resto de los endpoints (/votos, /votos_por_departamento, /auditoria) permanecen igual
+# Endpoint para obtener recintos por departamento y municipio
+@app.route("/recintos", methods=['GET'])
+def get_recintos():
+    try:
+        departamento = request.args.get('departamento')
+        municipio = request.args.get('municipio')
+        if not all([departamento, municipio]):
+            return jsonify({"error": "departamento y municipio requeridos"}), 400
+
+        mesas = session.execute(
+            "SELECT recinto FROM Mesa_Electoral WHERE departamento = %s AND municipio = %s",
+            [departamento, municipio]
+        )
+        recintos = [m.recinto for m in mesas]
+        return jsonify({"data": recintos})
+    except Exception as e:
+        print(f"Error en /recintos: {str(e)}")
+        return jsonify({"error": f"Error interno: {str(e)}"}), 500
+
+# Endpoints existentes (/votos, /votos_por_departamento, /auditoria) sin cambios
 @app.route("/votos", methods=['GET'])
 def votos_por_partido():
     departamento = request.args.get('departamento')
